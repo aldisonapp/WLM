@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WLM | Controle de Óleo — Demonstração</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="ferramentas.css">
+</head>
+
+<body>
+  <div class="app">
+    <!-- Barra Lateral / Cabeçalho Superior -->
+    <aside class="side">
+      <div class="brand">
+        <img class="wlmlogo" alt="Logo oficial WLM" src="W.png">
+      </div>
+
+      <nav class="nav">
+        <button class="active" onclick="jump('home')">⌂ Início</button>
+        <button onclick="jump('release')">＋ Nova liberação</button>
+        <button onclick="jump('history')">☷ Histórico</button>
+        <button onclick="jump('pumps')">▦ Bombas</button>
+        <button onclick="jump('tools')">🔧 Ferramentas</button>
+      </nav>
+
+      <div class="sidefoot">
+        Demonstração funcional<br>
+        Os dados são salvos neste navegador.
+      </div>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="main" id="home">
+      <div class="top">
+        <div>
+          <h1>WLM | Controle de Óleo</h1>
+          <p>Liberação, conferência e histórico de óleo</p>
+        </div>
+        <div class="pill">
+          <b>● Modo demonstração</b> · dados locais
+        </div>
+      </div>
+
+      <div class="notice">
+        Esta versão é para testes: os registros ficam apenas neste aparelho/navegador e <b>não</b> são sincronizados com
+        outros dispositivos. A quantidade medida é a liberada pela bomba, não a confirmação da aplicação no veículo.
+      </div>
+
+      <!-- Indicadores / Estatísticas -->
+      <section class="stats">
+        <div class="stat">
+          <small>Liberações registradas</small>
+          <strong id="nRecords">0</strong>
+        </div>
+        <div class="stat">
+          <small>Litros liberados</small>
+          <strong id="nLiters">0,00 L</strong>
+        </div>
+        <div class="stat">
+          <small>Conformes</small>
+          <strong id="nOk">0</strong>
+        </div>
+        <div class="stat">
+          <small>Divergências</small>
+          <strong id="nDiff">0</strong>
+        </div>
+      </section>
+
+      <!-- Painel de Liberação e Conferência -->
+      <div class="layout">
+        <!-- Formulário de Liberação -->
+        <section class="panel" id="release">
+          <h2>✚ Nova liberação</h2>
+
+          <div id="allBusyNotice" class="notice hide" style="background:#2a1f10;border-color:#b0872b;color:#ffd06b;">
+            ⚠ Todas as 9 bombas estão com liberações em andamento no momento. Finalize ou cancele uma liberação abaixo
+            para liberar uma bomba.
+          </div>
+
+          <form id="startForm">
+            <div class="formgrid">
+              <div>
+                <label for="os">Número da OS *</label>
+                <input id="os" required placeholder="Ex.: OS-45873" maxlength="60">
+              </div>
+              <div>
+                <label for="mechanic">Mecânico *</label>
+                <input id="mechanic" required placeholder="Nome do mecânico" maxlength="90">
+              </div>
+              <div>
+                <label for="pump">Bomba *</label>
+                <select id="pump" required></select>
+              </div>
+              <div>
+                <label for="oil">Óleo / produto</label>
+                <input id="oil" required placeholder="Nome ou especificação do óleo" maxlength="120">
+                <div class="checkbox-row">
+                  <input type="checkbox" id="saveAsDefaultOil">
+                  <label for="saveAsDefaultOil">Salvar como padrão desta bomba</label>
+                </div>
+              </div>
+              <div>
+                <label for="expected">Quantidade prevista na OS (L) *</label>
+                <input id="expected" required inputmode="decimal" placeholder="Ex.: 18,00">
+              </div>
+              <div>
+                <label for="initial">Leitura inicial do contador (L) *</label>
+                <input id="initial" required inputmode="decimal" placeholder="Ex.: 1250,50">
+              </div>
+            </div>
+
+            <div class="actions">
+              <button type="submit" class="btn primary">▶ Iniciar liberação</button>
+              <button type="reset" class="btn">Limpar</button>
+            </div>
+            <p class="hint">Primeiro registre a leitura inicial. É possível realizar liberações simultâneas em bombas
+              diferentes.</p>
+          </form>
+
+          <!-- Caixa de Liberações em Andamento -->
+          <div id="activeBox" class="activebox hide">
+            <div class="activebox-head">
+              <strong>⚡ Liberações em andamento (<span id="activeCount">0</span>)</strong>
+              <small class="activebox-sub">Selecione uma bomba para finalizar ou cancelar</small>
+            </div>
+
+            <!-- Abas das bombas ativas -->
+            <div id="activeTabs" class="activetabs"></div>
+
+            <!-- Detalhe da bomba ativa selecionada -->
+            <div class="active-detail">
+              <p id="activeInfo"></p>
+              <label for="final">Leitura final do contador (L) *</label>
+              <input id="final" inputmode="decimal" placeholder="Ex.: 1268,20">
+              <div class="actions">
+                <button id="finish" class="btn primary">✓ Finalizar e arquivar</button>
+                <button id="cancel" class="btn danger">Cancelar liberação</button>
+              </div>
+              <p class="hint">A leitura final deve ser maior ou igual à inicial. Cancelamentos liberam a bomba sem
+                registrar histórico.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Conferência e Bombas -->
+        <section>
+          <div class="panel">
+            <h2>▣ Conferência da liberação</h2>
+            <div class="result">
+              <small>Litros liberados (final − inicial)</small>
+              <div class="number" id="released">— L</div>
+              <div class="resultline">
+                <div>
+                  <small>Previsto na OS</small>
+                  <strong id="planned">— L</strong>
+                </div>
+                <div>
+                  <small>Diferença</small>
+                  <strong id="difference">— L</strong>
+                </div>
+              </div>
+              <div style="margin-top:16px" id="statusWrap">
+                <span class="status" style="background:#26352a;color:#bbd4c0">Aguardando conferência</span>
+              </div>
+            </div>
+
+            <h2 id="pumps">Status das bombas (9)</h2>
+            <div class="pumps" id="pumpGrid"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Tabela de Histórico -->
+      <section class="panel history" id="history">
+        <div class="historybar">
+          <h2>▤ Histórico de liberações</h2>
+          <input id="search" placeholder="Buscar OS, mecânico ou óleo...">
+        </div>
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Data/hora</th>
+                <th>OS</th>
+                <th>Mecânico</th>
+                <th>Bomba</th>
+                <th>Óleo</th>
+                <th>Previsto</th>
+                <th>Liberado</th>
+                <th>Diferença</th>
+                <th>Situação</th>
+              </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+        </div>
+        <div class="actions">
+          <button class="btn" id="export">↓ Exportar histórico CSV</button>
+          <button class="btn danger" id="clear">Apagar dados de demonstração</button>
+        </div>
+        <p class="foot">O histórico fica salvo no armazenamento local deste navegador. Limpar dados do navegador pode
+          apagá-lo.</p>
+      </section>
+
+      <!-- Módulo adicional: Ferramentas. O controle de óleo permanece independente. -->
+      <section class="panel tool-module" id="tools">
+        <div class="historybar"><div><h2>🔧 Controle de Ferramentas</h2><p class="hint">Retiradas, devoluções e assinaturas digitais na tela do tablet.</p></div><span class="tool-tag">Módulo adicional</span></div>
+        <div class="tool-stats"><div class="tool-stat">Emprestadas<strong id="toolOpenCount">0</strong></div><div class="tool-stat">Devolvidas<strong id="toolClosedCount">0</strong></div></div>
+        <div class="tool-columns">
+          <div class="tool-card">
+            <h3>＋ Registrar retirada</h3>
+            <form id="toolLoanForm">
+              <label for="toolMechanic">Nome do mecânico *</label><input id="toolMechanic" maxlength="90" required placeholder="Nome completo">
+              <label for="toolName">Ferramenta *</label><input id="toolName" maxlength="120" required placeholder="Ex.: Torquímetro">
+              <label for="toolCode">Código / patrimônio (opcional)</label><input id="toolCode" maxlength="60" placeholder="Ex.: F001">
+              <label for="toolLoanNotes">Observação (opcional)</label><input id="toolLoanNotes" maxlength="250" placeholder="Informações da retirada">
+              <label>Assinatura do mecânico na retirada *</label>
+              <canvas id="toolLoanSignature" class="tool-signature" aria-label="Área de assinatura na retirada"></canvas>
+              <button type="button" class="btn" id="toolClearLoanSig">Limpar assinatura</button>
+              <button type="submit" class="btn primary tool-submit">✓ Registrar retirada</button>
+            </form>
+          </div>
+          <div class="tool-card">
+            <h3>↩ Registrar devolução</h3>
+            <label for="toolSearch">Buscar ferramenta emprestada</label><input id="toolSearch" placeholder="Mecânico, ferramenta ou código">
+            <div id="toolLoans" class="tool-loans"></div>
+            <form id="toolReturnForm" class="hide">
+              <div id="toolReturnSummary" class="tool-return-summary"></div>
+              <label for="toolCondition">Condição na devolução *</label>
+              <select id="toolCondition" required><option value="Boa condição">Boa condição</option><option value="Com avaria">Com avaria</option><option value="Incompleta">Incompleta</option></select>
+              <label for="toolReturnNotes">Observação (opcional)</label><input id="toolReturnNotes" maxlength="250" placeholder="Ex.: sem avarias">
+              <label>Assinatura do mecânico na devolução *</label>
+              <canvas id="toolReturnSignature" class="tool-signature" aria-label="Área de assinatura na devolução"></canvas>
+              <button type="button" class="btn" id="toolClearReturnSig">Limpar assinatura</button>
+              <div class="actions"><button type="submit" class="btn primary">✓ Confirmar devolução</button><button type="button" class="btn" id="toolCancelReturn">Voltar</button></div>
+            </form>
+          </div>
+        </div>
+        <div class="tool-card tool-history"><div class="historybar"><h3>▤ Histórico de ferramentas</h3><button type="button" class="btn" id="toolExport">↓ Exportar CSV</button><button type="button" class="btn danger" id="toolClearHistory">Apagar histórico de ferramentas</button></div><div class="scroll"><table><thead><tr><th>Ferramenta</th><th>Código</th><th>Mecânico</th><th>Retirada</th><th>Devolução</th><th>Condição</th><th>Status</th><th>Assinaturas</th></tr></thead><tbody id="toolHistoryBody"></tbody></table></div></div>
+        <p class="foot">Demonstração: os registros e as assinaturas ficam apenas neste navegador. Para uso real, o desenvolvedor deverá implementar armazenamento seguro, backups e controle de acesso. O registro no SICON NET continua separado.</p>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="ferramentas.js"></script>
+</body>
+
+</html>
